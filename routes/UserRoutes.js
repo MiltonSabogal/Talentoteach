@@ -21,25 +21,26 @@ router.get('/user/:id', async (req, res) => {
 })
 
 router.post('/user', async (req, res) => {
-    try {
+    //Crear un usuario
+    const hashedPassword = await bcrypt.hash(req.body.password, 10)
 
+    let user = UserSchema({
+        name: req.body.name,
+        lastname: req.body.lastname,
+        email: req.body.email,
+        id: req.body.id,
+        password: hashedPassword
+    })
 
-        const hashedPassword = await bcrypt.hash(req.body.password, 10)
-        let user = UserSchema({
-            name: req.body.name,
-            lastname: req.body.lastname,
-            email: req.body.email,
-            id: req.body.id,
-            password: hashedPassword
-        })
-
-        user.save()
-        res.send(user)
-    } catch (error) {
-        console.log(error)
-        res.send('error almacenando la informacion')
-    }
-
+    user.save().then((result) => {
+        res.send(result)
+    }).catch((err) => {
+        if(err.code == 11000){
+            res.send({"status" : "error", "message" :"El correo ya fue registrado"})      
+        }else{
+            res.send({"status" : "error", "message" :err.message})      
+        }
+    })
 })
 
 router.patch('/user/:id', (req, res) => {
